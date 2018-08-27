@@ -1,0 +1,1362 @@
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 #include "p16F887.inc"
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Mar 21 2017
+                      00005 ;  MPASM PIC16F887 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2017 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      00810         LIST
+                      00002 
+                      00003 ; CONFIG1
+                      00004 ; __config 0x3FF5
+2007   33F5           00005     __CONFIG _CONFIG1, _FOSC_INTRC_CLKOUT & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _B
+                            OREN_ON & _IESO_OFF & _FCMEN_OFF & _LVP_ON
+                      00006 ; CONFIG2
+                      00007 ; __config 0x3FFF
+2008   3FFF           00008     __CONFIG _CONFIG2, _BOR4V_BOR40V & _WRT_OFF
+                      00009 
+                      00010 ;**************** DEFINING VARIABLES ****************************************
+                      00011 
+                      00012     cblock      0x20            ;Block of variables in PORT0
+                      00013                 
+                      00014                 ; 21h used for 7segment converter
+                      00015 
+                      00016     endc
+                      00017     ;prgFlags assigment
+                      00018     ;b'76543210'
+                      00019     ;bit 0 is for counting
+                      00020     ;bit 1 is for if the digit 2 was already incremented this cycle
+                      00021     ;
+                      00022     ;Counting: 0 means not counting 1 means counting
+                      00023     
+                      00024     cblock      0x70            ; Block of variables starts at address 70h
+  00000070            00025                 W_TEMP          ; 70h stores working register for interupts
+  00000071            00026                 STATUS_TEMP     ; 71h stores status register
+  00000072            00027                 tmrDigit1       ; LSB of time display
+  00000073            00028                 tmrDigit2       ; MSB of time display
+  00000074            00029                 prgFlags        ; Progress flags
+  00000075            00030                 counter         ; used for display delay
+  00000076            00031                 counter2        ; used for display delay
+  00000077            00032                 GLOBALcounter   ; used for number of cars passed by
+  00000078            00033                 int_TEMPORARY   ; used in EEPROM mode counter 1 or 2 could probably bw hijaked if needed
+                      00034     endc                                                
+                      00035        
+                      00036 ;************************ START OF PROGRAM **********************************
+                      00037     org         0x0000          ; Address of the first program instruction
+0000   2???           00038     goto        main            ; Go to label "main"
+                      00039        
+                      00040 ;************************ INTERRUPT ROUTINE *********************************
+                      00041     org         0x0004                  ; Interrupt vector
+                      00042 ;************************ ISR contex saving from datasheet ******************
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0004   00F0           00043     MOVWF       W_TEMP                  ;copy W to temp register,could be in either bank
+0005   0E03           00044     SWAPF       STATUS,W                ;swap status to be saved into W
+0006   1283           00045     BCF         STATUS,RP0              ;change to bank 0 regardless of current bank
+0007   00F1           00046     MOVWF       STATUS_TEMP             ;save status to bank 0 register
+                      00047 ;************************ Interupt service routine***************************
+                      00048     
+0008   1283 1303      00049     BANKSEL     PORTA
+000A   3009           00050     MOVLW       b'00001001'
+000B   0085           00051     MOVWF       PORTA
+000C   1283 1303      00052     BANKSEL     PORTD
+                      00053 
+000E   1283 1303      00054     BANKSEL     tmrDigit1
+Message[305]: Using default destination of 1 (file).
+0010   0AF2           00055     INCF        tmrDigit1
+                      00056     
+0011   0872           00057     MOVFW       tmrDigit1
+0012   0873           00058     MOVFW       tmrDigit2
+0013   1283 1303      00059     BANKSEL     TMR0
+0015   3038           00060     MOVLW       .56                     ; Makes constant 200
+0016   0781           00061     ADDWF       TMR0,1
+                      00062 
+0017   1283 1303      00063     BANKSEL     INTCON                  ; In order to clear overflow flag 
+0019   110B           00064     bcf         INTCON,TMR0IF           ; clear interrupt flag TMR0IF
+                      00065 ;************************ ISR context loading from datasheet ****************
+001A   0E71           00066     SWAPF       STATUS_TEMP,W           ;swap STATUS_TEMP register into W, sets bank to original state
+001B   0083           00067     MOVWF       STATUS                  ;move W into STATUS register
+001C   0EF0           00068     SWAPF       W_TEMP,F                ;swap W_TEMP
+001D   0E70           00069     SWAPF       W_TEMP,W                ;swap W_TEMP into W
+                      00070 
+001E   0009           00071     retfie                              ;Return from interrupt routine
+                      00072        
+                      00073 ;************************ MAIN PROGRAM **************************************
+001F                  00074 main                                ;Start of the main program
+                      00075     
+Warning[203]: Found opcode in column 1. (Call)
+001F   2???           00076 Call            mSETUP              ;Setup for main loop
+                      00077 
+0020                  00078 loop:
+                      00079 
+                      00080     
+                      00081     
+Warning[205]: Found directive in column 1. (BANKSEL)
+0020   1283 1303      00082 BANKSEL         PORTB
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0022   0806           00083 MOVFW           PORTB
+                      00084 
+Warning[205]: Found directive in column 1. (BANKSEL)
+0023   1283 1303      00085 BANKSEL         tmrDigit1
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0025   0872           00086 MOVFW           tmrDigit1
+                      00087 
+                      00088                 
+                      00089 ;Overflow checks                
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00090 ;Checks if either digit is equal to 10
+                      00091 ;tmrDigit1 overflow means increment digit2 and reset digit1
+Warning[205]: Found directive in column 1. (BANKSEL)
+0026   1283 1303      00092 BANKSEL         tmrDigit1
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0028   0872           00093 MOVFW           tmrDigit1
+Warning[205]: Found directive in column 1. (BANKSEL)
+0029   1283 1303      00094 BANKSEL         STATUS
+Warning[203]: Found opcode in column 1. (ADDLW)
+002B   3EF6           00095 ADDLW           b'11110110'
+Warning[203]: Found opcode in column 1. (BTFSS)
+002C   1C03           00096 BTFSS           STATUS,C
+Warning[203]: Found opcode in column 1. (GOTO)
+002D   2???           00097 GOTO            enddigit1overflow
+Warning[205]: Found directive in column 1. (BANKSEL)
+002E   1283 1303      00098 BANKSEL         tmrDigit1
+Warning[203]: Found opcode in column 1. (CLRF)
+0030   01F2           00099 CLRF            tmrDigit1
+                      00100 
+Warning[205]: Found directive in column 1. (BANKSEL)
+0031   1283 1303      00101 BANKSEL         tmrDigit2
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0033   0873           00102 MOVFW           tmrDigit2
+Warning[203]: Found opcode in column 1. (ADDLW)
+0034   3E01           00103 ADDLW           b'00000001'
+Warning[203]: Found opcode in column 1. (MOVWF)
+0035   00F3           00104 MOVWF           tmrDigit2
+                      00105                 
+0036                  00106 enddigit1overflow:
+                      00107 ;tmrDigit2 overflow means digit2 and set counting flag to 0 and clear timers
+Warning[205]: Found directive in column 1. (BANKSEL)
+0036   1283 1303      00108 BANKSEL         tmrDigit2
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0038   0873           00109 MOVFW           tmrDigit2
+Warning[205]: Found directive in column 1. (BANKSEL)
+0039   1283 1303      00110 BANKSEL         STATUS
+Warning[203]: Found opcode in column 1. (ADDLW)
+003B   3EF6           00111 ADDLW           b'11110110'
+Warning[203]: Found opcode in column 1. (BTFSS)
+003C   1C03           00112 BTFSS           STATUS,C
+Warning[203]: Found opcode in column 1. (GOTO)
+003D   2???           00113 GOTO            enddigit2overflow
+                      00114 
+Warning[205]: Found directive in column 1. (BANKSEL)
+003E   1283 1303      00115 BANKSEL         tmrDigit1
+Warning[203]: Found opcode in column 1. (CLRF)
+0040   01F3           00116 CLRF            tmrDigit2
+Warning[205]: Found directive in column 1. (BANKSEL)
+0041   1283 1303      00117 BANKSEL         tmrDigit2
+Warning[203]: Found opcode in column 1. (CLRF)
+0043   01F3           00118 CLRF            tmrDigit2
+                      00119 ;Set display to zero
+Warning[205]: Found directive in column 1. (BANKSEL)
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0044   1283 1303      00120 BANKSEL         PORTC
+Warning[203]: Found opcode in column 1. (CLRF)
+0046   0187           00121 CLRF            PORTC
+                      00122 ;Clear flag for counting    
+Warning[205]: Found directive in column 1. (BANKSEL)
+0047   1283 1303      00123 BANKSEL         prgFlags
+Warning[203]: Found opcode in column 1. (BCF)
+0049   1074           00124 BCF             prgFlags,0
+                      00125 
+004A                  00126 enddigit2overflow:
+                      00127 
+                      00128 ;Global counter overflow check
+                      00129 ;if it's 10 set it back to 1
+Warning[205]: Found directive in column 1. (BANKSEL)
+004A   1283 1303      00130 BANKSEL         GLOBALcounter
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+004C   0877           00131 MOVFW           GLOBALcounter
+Warning[205]: Found directive in column 1. (BANKSEL)
+004D   1283 1303      00132 BANKSEL         STATUS
+Warning[203]: Found opcode in column 1. (ADDLW)
+004F   3E6F           00133 ADDLW           b'01101111'
+Warning[203]: Found opcode in column 1. (BTFSS)
+0050   1C03           00134 BTFSS           STATUS,C
+Warning[203]: Found opcode in column 1. (GOTO)
+0051   2???           00135 GOTO            endGLOBALcounteroverflow
+Warning[205]: Found directive in column 1. (BANKSEL)
+0052   1283 1303      00136 BANKSEL         GLOBALcounter
+Warning[203]: Found opcode in column 1. (CLRF)
+0054   01F7           00137 CLRF            GLOBALcounter
+                      00138 
+0055                  00139 endGLOBALcounteroverflow:
+                      00140     
+                      00141 ;Mode switch check
+Warning[205]: Found directive in column 1. (BANKSEL)
+0055   1283 1303      00142 BANKSEL         PORTB
+Warning[203]: Found opcode in column 1. (BTFSS)
+0057   1E86           00143 BTFSS           PORTB,5
+Warning[203]: Found opcode in column 1. (CALL)
+0058   2???           00144 CALL            EEPROMMODE
+                      00145 ;Else do nothing
+                      00146     
+                      00147     
+                      00148     
+                      00149     
+                      00150     
+                      00151     
+                      00152 ;Start button check 
+Warning[205]: Found directive in column 1. (BANKSEL)
+0059   1283 1303      00153 BANKSEL         prgFlags                ;Check that it's not already running
+Warning[203]: Found opcode in column 1. (BTFSC)
+005B   1874           00154 BTFSC           prgFlags,0              ;Low means not running  
+Warning[203]: Found opcode in column 1. (GOTO)
+005C   2???           00155 GOTO            ENDSTARTCHECK
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00156 ;Only runs this when flag is not set
+Warning[205]: Found directive in column 1. (BANKSEL)
+005D   1283 1303      00157 BANKSEL         PORTB
+Warning[203]: Found opcode in column 1. (BTFSC)
+005F   1886           00158 BTFSC           PORTB,1                 ;Active low butoon
+Warning[203]: Found opcode in column 1. (GOTO)
+0060   2???           00159 GOTO            ENDSTARTCHECK
+                      00160 ;Start is clear (being pressed)
+Warning[205]: Found directive in column 1. (BANKSEL)
+0061   1283 1303      00161 BANKSEL         tmrDigit1
+Warning[203]: Found opcode in column 1. (CLRF)
+0063   01F2           00162 CLRF            tmrDigit1
+Warning[205]: Found directive in column 1. (BANKSEL)
+0064   1283 1303      00163 BANKSEL         tmrDigit2
+Warning[203]: Found opcode in column 1. (CLRF)
+0066   01F3           00164 CLRF            tmrDigit2  
+Warning[203]: Found opcode in column 1. (BSF)
+0067   1474           00165 BSF             prgFlags,0              ;Start counting  
+                      00166 ;Need to set flags and reset counter
+0068                  00167 ENDSTARTCHECK:
+                      00168 ;End of start button check
+                      00169 
+                      00170     
+                      00171     
+                      00172 ; Stopping check
+Warning[205]: Found directive in column 1. (BANKSEL)
+0068   1283 1303      00173 BANKSEL         prgFlags  
+Warning[203]: Found opcode in column 1. (BTFSS)
+006A   1C74           00174 BTFSS           prgFlags,0              ;high means running
+Warning[203]: Found opcode in column 1. (GOTO)
+006B   2???           00175 GOTO            ENDSTOPCHECK
+                      00176 ;Check if counter is running hig
+                      00177 ;Do this if flag is set (meaning stopped)
+                      00178 ;Check if stop button was pressed
+Warning[205]: Found directive in column 1. (BANKSEL)
+006C   1283 1303      00179 BANKSEL         PORTB
+Warning[203]: Found opcode in column 1. (BTFSC)
+006E   1A06           00180 BTFSC           PORTB,4
+Warning[203]: Found opcode in column 1. (GOTO)
+006F   2???           00181 GOTO            ENDSTOPCHECK
+                      00182 
+                      00183 
+Warning[203]: Found opcode in column 1. (CALL)
+0070   2???           00184 CALL            WRITECHANGE
+Warning[205]: Found directive in column 1. (BANKSEL)
+0071   1283 1303      00185 BANKSEL         GLOBALcounter
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0073   0877           00186 MOVFW           GLOBALcounter   ; increment 
+Warning[203]: Found opcode in column 1. (ADDLW)
+0074   3E10           00187 ADDLW           b'00010000'
+Warning[203]: Found opcode in column 1. (MOVWF)
+0075   00F7           00188 MOVWF           GLOBALcounter    
+Warning[203]: Found opcode in column 1. (CALL)
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0076   2???           00189 CALL            SAVERESULT      ; Save the results
+                      00190 
+                      00191     
+                      00192     
+                      00193     
+                      00194 ;lazy solution to delay being too short.
+Warning[203]: Found opcode in column 1. (CALL)
+0077   2???           00195 CALL            DISPLAYDELAY    ; so you can read
+Warning[203]: Found opcode in column 1. (CALL)
+0078   2???           00196 CALL            DISPLAYDELAY    ; so you can read
+Warning[203]: Found opcode in column 1. (CALL)
+0079   2???           00197 CALL            DISPLAYDELAY    ; so you can read
+                      00198 ;end of quick solution
+                      00199 ;Reset the values
+Warning[205]: Found directive in column 1. (BANKSEL)
+007A   1283 1303      00200 BANKSEL         tmrDigit1
+Warning[203]: Found opcode in column 1. (CLRF)
+007C   01F3           00201 CLRF            tmrDigit2
+Warning[205]: Found directive in column 1. (BANKSEL)
+007D   1283 1303      00202 BANKSEL         tmrDigit2
+Warning[203]: Found opcode in column 1. (CLRF)
+007F   01F3           00203 CLRF            tmrDigit2
+Warning[205]: Found directive in column 1. (BANKSEL)
+0080   1283 1303      00204 BANKSEL         prgFlags
+Warning[203]: Found opcode in column 1. (BCF)
+0082   1074           00205 BCF             prgFlags,0
+Warning[205]: Found directive in column 1. (BANKSEL)
+0083   1283 1303      00206 BANKSEL         PORTC           ; Set counter back to zero display
+Warning[203]: Found opcode in column 1. (CLRF)
+0085   0187           00207 CLRF            PORTC
+0086                  00208 ENDSTOPCHECK:
+                      00209 ;END of stopping check
+                      00210     
+                      00211 
+Warning[203]: Found opcode in column 1. (BTFSC)
+0086   1874           00212 BTFSC           prgFlags,0
+Warning[203]: Found opcode in column 1. (Call)
+0087   2???           00213 Call            WRITECHANGE
+                      00214 ;Only display a non zero value when counter is running and therefore reset properly
+                      00215     
+0088   2???           00216     goto        loop            ; Remain here
+                      00217 
+                      00218   
+0089                  00219 mSETUP
+                      00220     ;All the setup for the main loop before the main code runs
+                      00221     ;Includes allowing interupts, tmr0 interupt, setting oscillator
+                      00222     ;speed to 2MHZ, reseting tmr0 and setting up pins.
+                      00223     
+                      00224     ;Disable all interupts during setup
+0089   1283 1303      00225     BANKSEL      INTCON             ; In oder to disable all interupts during setup
+008B   138B           00226     BCF          INTCON,GIE         ; Disabled during setup
+                      00227 
+                      00228 
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00229     
+                      00230     
+                      00231 ;START of PORTC setup    
+                      00232 
+                      00233     
+                      00234     ;Set all pins to digital to avoid potential problems
+008C   1683 1703      00235     BANKSEL     ANSEL               ;
+008E   3000           00236     MOVLW       b'00000000'         ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+008F   0088           00237     MOVWF       ANSEL               ;Set PORTA to digital
+                      00238 
+0090   1683 1703      00239     BANKSEL     ANSELH              ;Set all of port A to digital IO
+0092   3000           00240     MOVLW       b'00000000'         ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0093   0089           00241     MOVWF       ANSELH              ;0 means digital
+                      00242 
+                      00243     ;PORTA setup
+0094   1283 1303      00244     BANKSEL     PORTA
+0096   0185           00245     CLRF        PORTA
+0097   1683 1303      00246     BANKSEL     TRISA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0099   0185           00247     CLRF        TRISA
+                      00248     
+                      00249     ;PORTB setup (input)
+009A   1283 1303      00250     BANKSEL     PORTB
+009C   0186           00251     CLRF        PORTB
+009D   1683 1303      00252     BANKSEL     TRISB
+009F   30FF           00253     MOVLW       b'11111111'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00A0   0806           00254     MOVFW       TRISB    
+                      00255     
+                      00256     ;PORTC setup
+00A1   1283 1303      00257     BANKSEL     PORTC               
+00A3   0187           00258     CLRF        PORTC                 
+00A4   1683 1303      00259     BANKSEL     TRISC               
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00A6   0187           00260     CLRF        TRISC 
+                      00261     
+                      00262     ;PORTD setup
+00A7   1283 1303      00263     BANKSEL     PORTD
+00A9   0188           00264     CLRF        PORTD
+00AA   1683 1303      00265     BANKSEL     TRISD
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00AC   0188           00266     CLRF        TRISD
+                      00267     
+                      00268 
+00AD   1283 1303      00269     BANKSEL     INTCON
+00AF   168B           00270     BSF         INTCON,T0IE         ; Enables interupt for timer0 instead of polling
+                      00271     
+00B0   1683 1303      00272     BANKSEL     OSCCON              ; Set clock to 2Mhz/ b'101' 6-4
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B2   170F           00273     BSF         OSCCON,6
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00B3   128F           00274     BCF         OSCCON,5
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B4   160F           00275     BSF         OSCCON,4
+                      00276     
+                      00277     
+00B5   1683 1303      00278     BANKSEL     OPTION_REG          ; Assign prescaller to WDT (1:1 tmr0)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B7   1281           00279     bcf         OPTION_REG,T0CS     ; TMR0 counts pulses from instruction cycle       
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B8   1181           00280     bcf         OPTION_REG,PSA      ; Prescaler is assign to TIMER0
+                      00281     ;Set prescaller to 1:256
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B9   1501           00282     BSF         OPTION_REG,PS2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00BA   1481           00283     BSF         OPTION_REG,PS1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00BB   1401           00284     BSF         OPTION_REG,PS0
+                      00285         
+                      00286     
+00BC   1283 1303      00287     banksel     TMR0                ; Clear timer0 and counter
+00BE   0181           00288     clrf        TMR0
+00BF   01F5           00289     clrf        counter
+                      00290 
+                      00291     ;Clear counters from previous run
+00C0   1283 1303      00292     BANKSEL     tmrDigit1
+00C2   01F2           00293     CLRF        tmrDigit1    
+00C3   1283 1303      00294     BANKSEL     tmrDigit2
+00C5   01F3           00295     CLRF        tmrDigit2
+00C6   1283 1303      00296     BANKSEL     prgFlags
+00C8   01F4           00297     CLRF        prgFlags
+00C9   1283 1303      00298     BANKSEL     GLOBALcounter
+00CB   01F7           00299     CLRF        GLOBALcounter
+                      00300     
+                      00301     
+                      00302     ;Setup timer for first time
+00CC   1283 1303      00303     BANKSEL     TMR0
+00CE   0181           00304     CLRF        TMR0
+00CF   3038           00305     MOVLW       .56                     ; Makes constant 200
+00D0   0781           00306     ADDWF       TMR0,1
+                      00307 
+                      00308     
+                      00309  
+                      00310 ;Enable interupts after setup
+00D1   1283 1303      00311     BANKSEL     INTCON              ; Enable interupts after setup
+00D3   178B           00312     BSF         INTCON,GIE          ; Enabled after setup
+                      00313 
+                      00314     
+00D4   0008           00315     RETURN      ;End of setup
+                      00316 
+                      00317     
+00D5                  00318 WRITECHANGE
+                      00319     ;Write the values of tmrDigit1 and tmr Digit2 to portC
+                      00320     ;Upper half of portC is connected to lower half of display so code here
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00321     ;uses some weird unesary swapping.
+                      00322     
+00D5   3000           00323     MOVLW       b'00000000'
+00D6   1283 1303      00324     BANKSEL     tmrDigit1
+00D8   0772           00325     ADDWF       tmrDigit1,0
+00D9   0E72           00326     SWAPF       tmrDigit1,0     
+00DA   1283 1303      00327     BANKSEL     tmrDigit2
+00DC   0773           00328     ADDWF       tmrDigit2,0
+00DD   1283 1303      00329     BANKSEL     PORTC
+00DF   0087           00330     MOVWF       PORTC
+                      00331     
+                      00332     
+                      00333 
+                      00334     
+00E0   0008           00335     return
+                      00336 
+00E1                  00337 DISPLAYDELAY
+                      00338     ;For holding values shown on the 7segment for display purposes
+                      00339     ;Just a standard software delay instead of using counters
+                      00340     
+                      00341     ;For debugging purposes this can be shorted or simply skipped
+                      00342     
+                      00343     ;Start
+00E1   30FF           00344     MOVLW       b'11111111'
+00E2   00F6           00345     MOVWF       counter2
+                      00346         
+                      00347     ;start inner
+Warning[207]: Found label after column 1. (DELAYOUTER)
+00E3                  00348     DELAYOUTER:
+00E3   30FF           00349     MOVLW       b'11111111'
+00E4   00F5           00350     MOVWF       counter
+Warning[207]: Found label after column 1. (DELAYINNER)
+00E5                  00351     DELAYINNER:
+Message[305]: Using default destination of 1 (file).
+00E5   0BF5           00352     DECFSZ      counter
+00E6   2???           00353     GOTO        DELAYINNER
+                      00354     ;end of inner
+Message[305]: Using default destination of 1 (file).
+00E7   0BF6           00355     DECFSZ      counter2
+00E8   2???           00356     GOTO        DELAYOUTER
+                      00357     ;End of software delay
+                      00358     
+                      00359     
+00E9   0008           00360     return
+                      00361     
+00EA                  00362 SAVERESULT    
+                      00363     ;SAVE the result to EEPROM
+                      00364     ;Temporarilly disables INTERUPTS because datasheet said I should
+                      00365     ;Also increments and updates display of global
+00EA   1283 1303      00366     BANKSEL      INTCON             ; Disable interupt
+00EC   138B           00367     BCF          INTCON,GIE         ; 
+                      00368     
+                      00369 
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00370     ;EEPROM write 2 bytes, 7segment display and global counter
+00ED   2???           00371     CALL        WRITECHANGE         ;Convert 2 variables into one to save space
+                      00372     ;*********************Start of EEPROM write code from datasheet*******************
+00EE   1283 1703      00373     BANKSEL     EEADR               ;EEADR is EEPROM adress
+00F0   1283 1303      00374     BANKSEL     GLOBALcounter       ;
+00F2   0E77           00375     SWAPF       GLOBALcounter,0     ;Current global counter is where value will be put
+00F3   1283 1703      00376     BANKSEL     EEADR               ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00F5   008D           00377     MOVWF       EEADR               ;Location to write (current value of GLOBAl)
+00F6   1283 1303      00378     BANKSEL     PORTC               ;
+00F8   0807           00379     MOVFW       PORTC               ;
+00F9   1283 1703      00380     BANKSEL     EEADR               ;Adding this in to make up for portc select
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00FB   008C           00381     MOVWF       EEDAT               ;Data that will be saved
+00FC   1683 1703      00382     BANKSEL     EECON1              
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00FE   138C           00383     BCF         EECON1,EEPGD        ;Point to DATA memory
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00FF   150C           00384     BSF         EECON1,WREN         ;Enable writting to EEPROM
+                      00385     
+0100   138B           00386     BCF         INTCON, GIE         ;Disable interupts
+0101   1B8B           00387     BTFSC       INTCON, GIE         ;Some stupid architecture limitation
+0102   2???           00388     GOTO        $-2
+                      00389     ;Begin required sequence
+0103   3055           00390     MOVLW       55h
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0104   008D           00391     MOVWF       EECON2              ;Secret code or something to actually write             
+0105   30AA           00392     MOVLW       0xAA
+                      00393     ;So datasheet said use AAh here but that dosen't compile so I used 0xAA
+                      00394     ;Hopefully this works
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0106   008D           00395     MOVWF       EECON2              ;Secret code part 2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0107   148C           00396     BSF         EECON1,WR           ;Set WR bit to begin write
+0108   178B           00397     BSF         INTCON,GIE          ;Re enable interupts
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0109   110C           00398     BCF         EECON1,WREN         ;Disable EEPROM writes again,
+                      00399     ;****************End of datasheet EEPROM write code**************************************           
+010A   1283 1303      00400     BANKSEL     STATUS              ; Return back to bank 0 after code
+010C   1283           00401     BCF         STATUS,RP0
+010D   1303           00402     BCF         STATUS,RP1
+                      00403     
+010E   1283 1303      00404     BANKSEL     INTCON              ; 
+0110   178B           00405     BSF         INTCON,GIE          ; ReEnable interupt
+                      00406     ;Update global display
+0111   0877           00407     MOVFW       GLOBALcounter
+0112   1283 1303      00408     BANKSEL     PORTD
+0114   0088           00409     MOVWF       PORTD        
+                      00410     ;Sleep
+0115   0008           00411     return
+                      00412    
+0116                  00413 EEPROMMODE
+                      00414     ;EEPROM viewer mode code
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00415     ;Make sure program is not actvely running.
+0116   1283 1303      00416     BANKSEL             prgFlags                ;Check that it's not already running
+0118   1874           00417     BTFSC               prgFlags,0              ;Low means not running  
+0119   0008           00418     RETURN                                      ;Do not go into EEPROM mode
+011A   1283 1303      00419     BANKSEL             int_TEMPORARY
+011C   01F8           00420     CLRF                int_TEMPORARY
+011D   2???           00421     CALL                DISPLAYDELAY            ;Give user time to release the button after pressing it.
+011E   2???           00422     CALL                DISPLAYDELAY            ;Give user time to release the button after pressing it.
+011F   2???           00423     CALL                DISPLAYDELAY            ;Give user time to release the button after pressing it.
+Warning[207]: Found label after column 1. (EEPROMstart)
+0120                  00424     EEPROMstart:
+                      00425     
+                      00426     
+                      00427     
+0120   1E86           00428     BTFSS       PORTB,5             ; exit test
+0121   2???           00429     GOTO        EEPROMend           ; If exit button pressed exit
+                      00430     ;button not pressed
+                      00431     ;For now try displaying the first value only
+                      00432 
+                      00433 ;Start of int_TEMPORARY increment and decrement checks
+                      00434 ;Check if Viewmode should be incremented    
+0122   1283 1303      00435     BANKSEL             PORTB
+0124   1A06           00436     BTFSC               PORTB,4                 ;Active low butoon
+0125   2???           00437     GOTO                ENDINCCHECK
+                      00438     ;Decrement button clear (being pressed)    
+Message[305]: Using default destination of 1 (file).
+0126   0AF8           00439     INCF                int_TEMPORARY    
+Warning[207]: Found label after column 1. (ENDINCCHECK)
+0127                  00440     ENDINCCHECK:
+                      00441 ;Check if viewmode should be decremented
+0127   1283 1303      00442     BANKSEL             PORTB
+0129   1886           00443     BTFSC               PORTB,1                 ;Active low butoon
+012A   2???           00444     GOTO                ENDDECCHECK
+                      00445 ;Decrement button clear (being pressed)    
+Message[305]: Using default destination of 1 (file).
+012B   03F8           00446     DECF                int_TEMPORARY    
+Warning[207]: Found label after column 1. (ENDDECCHECK)
+012C                  00447     ENDDECCHECK:
+                      00448 ;int_TEMPORARY overflow and underflow checks
+Warning[205]: Found directive in column 1. (BANKSEL)
+012C   1283 1303      00449 BANKSEL         int_TEMPORARY
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+012E   0878           00450 MOVFW           int_TEMPORARY
+Warning[205]: Found directive in column 1. (BANKSEL)
+012F   1283 1303      00451 BANKSEL         STATUS
+Warning[203]: Found opcode in column 1. (ADDLW)
+0131   3EF6           00452 ADDLW           b'11110110'
+Warning[203]: Found opcode in column 1. (BTFSS)
+0132   1C03           00453 BTFSS           STATUS,C
+Warning[203]: Found opcode in column 1. (GOTO)
+0133   2???           00454 GOTO            inttempoverflowcheck
+                      00455 ;Else
+Warning[203]: Found opcode in column 1. (CLRF)
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0134   01F8           00456 CLRF            int_TEMPORARY
+                      00457     
+0135                  00458 inttempoverflowcheck:
+Warning[205]: Found directive in column 1. (BANKSEL)
+0135   1283 1303      00459 BANKSEL         int_TEMPORARY
+Warning[204]: Found pseudo-op in column 1. (MOVFW)
+0137   0878           00460 MOVFW           int_TEMPORARY
+Warning[205]: Found directive in column 1. (BANKSEL)
+0138   1283 1303      00461 BANKSEL         STATUS
+Warning[203]: Found opcode in column 1. (XORLW)
+013A   3AFF           00462 XORLW           b'11111111'
+Warning[203]: Found opcode in column 1. (BTFSS)
+013B   1D03           00463 BTFSS           STATUS,Z
+Warning[203]: Found opcode in column 1. (GOTO)
+013C   2???           00464 GOTO            inttempunderflowcheck
+                      00465 ;Else
+Warning[205]: Found directive in column 1. (BANKSEL)
+013D   1283 1303      00466 BANKSEL         int_TEMPORARY
+Warning[203]: Found opcode in column 1. (CLRF)
+013F   01F8           00467 CLRF            int_TEMPORARY
+Warning[203]: Found opcode in column 1. (MOVLW)
+0140   3009           00468 MOVLW           b'00001001'
+Warning[203]: Found opcode in column 1. (MOVWF)
+0141   00F8           00469 MOVWF           int_TEMPORARY
+                      00470     
+0142                  00471 inttempunderflowcheck:
+                      00472     
+                      00473     
+                      00474     
+0142   1283 1303      00475     BANKSEL     int_TEMPORARY
+0144   0878           00476     MOVFW       int_TEMPORARY
+                      00477     ;MOVLW      b'00000001'         ;For testing
+                      00478 ;*************************EEPROM read code from datasheet************************
+0145   1283 1703      00479     BANKSEL     EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0147   008D           00480     MOVWF       EEADR               ; Data memory
+0148   1683 1703      00481     BANKSEL     EECON1              ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+014A   138C           00482     BCF         EECON1, EEPGD       ; Point to data memory?
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+014B   140C           00483     BSF         EECON1, RD          ; EE Read?
+014C   1283 1703      00484     BANKSEL     EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+014E   080C           00485     MOVF        EEDAT,w             ;W = EEDAT
+014F   1303           00486     BCF         STATUS, RP1         ;Return to Bank 0
+                      00487 ;************************EEPROM read code from datasheet end********************
+0150   1283 1303      00488     BANKSEL     PORTC
+0152   0087           00489     MOVWF       PORTC               ;Show EEPROM value on PORTC
+0153   1283 1303      00490     BANKSEL     int_TEMPORARY
+0155   0E78           00491     SWAPF       int_TEMPORARY,0     ;Put int_temporary on portD for output
+0156   0088           00492     MOVWF       PORTD
+                      00493     
+0157   2???           00494     CALL        DISPLAYDELAY        ;Slow down loop to allow user to release button
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0158   2???           00495     GOTO        EEPROMstart
+                      00496     
+                      00497   
+                      00498     
+                      00499     
+Warning[207]: Found label after column 1. (EEPROMend)
+0159                  00500     EEPROMend:
+0159   1283 1303      00501     BANKSEL     PORTC
+015B   3000           00502     MOVLW       b'00000000'                     ;Set counter back to displaying 0
+015C   0087           00503     MOVWF       PORTC                           
+015D   1283 1303      00504     BANKSEL     GLOBALcounter
+015F   0877           00505     MOVFW       GLOBALcounter
+0160   1283 1303      00506     BANKSEL     PORTD                           ;Restore global counter to normal
+0162   0088           00507     MOVWF       PORTD  
+                      00508     
+0163   2???           00509     CALL        DISPLAYDELAY            ;Give user time to release the button after pressing it.
+0164   2???           00510     CALL        DISPLAYDELAY            ;Give user time to release the button after pressing it.
+0165   0008           00511     return
+                      00512     
+                      00513     
+Warning[205]: Found directive in column 1. (end)
+33F5 3FFF             00514 end
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ANS0                              00000000
+ANS1                              00000001
+ANS10                             00000002
+ANS11                             00000003
+ANS12                             00000004
+ANS13                             00000005
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANS7                              00000007
+ANS8                              00000000
+ANS9                              00000001
+ANSEL                             00000188
+ANSELH                            00000189
+BAUDCTL                           00000187
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+BRG8                              00000000
+BRG9                              00000001
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BRGH                              00000002
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1IE                              00000005
+C1IF                              00000005
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SEN                             00000005
+C2CH0                             00000000
+C2CH1                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2REN                             00000004
+C2RSEL                            00000004
+C2SYNC                            00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000107
+CM2CON0                           00000108
+CM2CON1                           00000109
+CREN                              00000004
+CSRC                              00000007
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DELAYINNER                        000000E5
+DELAYOUTER                        000000E3
+DISPLAYDELAY                      000000E1
+D_A                               00000005
+D_NOT_A                           00000005
+ECCPAS                            0000009C
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDAT                             0000010C
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+EEPROMMODE                        00000116
+EEPROMend                         00000159
+EEPROMstart                       00000120
+ENDDECCHECK                       0000012C
+ENDINCCHECK                       00000127
+ENDSTARTCHECK                     00000068
+ENDSTOPCHECK                      00000086
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+FVREN                             00000000
+GCEN                              00000007
+GIE                               00000007
+GLOBALcounter                     00000077
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HTS                               00000002
+I2C_DATA                          00000005
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOCB                              00000096
+IOCB0                             00000000
+IOCB1                             00000001
+IOCB2                             00000002
+IOCB3                             00000003
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+LTS                               00000001
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSK                               00000093
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSFIE                             00000007
+OSFIF                             00000007
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+OSTS                              00000003
+P                                 00000004
+P1M0                              00000006
+P1M1                              00000007
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           0000009D
+PULSR                             00000002
+PULSS                             00000003
+PWM1CON                           0000009B
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+RE3                               00000003
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SAVERESULT                        000000EA
+SBOREN                            00000004
+SCKP                              00000004
+SCS                               00000000
+SEN                               00000000
+SENDB                             00000003
+SMP                               00000007
+SPBRG                             00000099
+SPBRGH                            0000009A
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SPEN                              00000007
+SR0                               00000006
+SR1                               00000007
+SRCON                             00000185
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000093
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+STATUS_TEMP                       00000071
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SWDTEN                            00000000
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1GINV                            00000007
+T1GIV                             00000007
+T1GSS                             00000001
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1GE                            00000006
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 21
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRISE3                            00000003
+TRMT                              00000001
+TUN0                              00000000
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 22
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+ULPWUE                            00000005
+ULPWUIE                           00000002
+ULPWUIF                           00000002
+VCFG0                             00000004
+VCFG1                             00000005
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             00000097
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+VRSS                              00000004
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000105
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WPUB                              00000095
+WPUB0                             00000000
+WPUB1                             00000001
+WPUB2                             00000002
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WRITECHANGE                       000000D5
+WUE                               00000001
+W_TEMP                            00000070
+Z                                 00000002
+_.org_1_0102                      00000102
+_BOR21V                           00003EFF
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_BOR40V                           00003FFF
+_BOR4V_BOR21V                     00003EFF
+_BOR4V_BOR40V                     00003FFF
+_BOREN_NSLEEP                     00003EFF
+_BOREN_OFF                        00003CFF
+_BOREN_ON                         00003FFF
+_BOREN_SBODEN                     00003DFF
+_BOR_NSLEEP                       00003EFF
+_BOR_OFF                          00003CFF
+_BOR_ON                           00003FFF
+_BOR_SBODEN                       00003DFF
+_CONFIG1                          00002007
+_CONFIG2                          00002008
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003F7F
+_CP_OFF                           00003FFF
+_CP_ON                            00003FBF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         00001FFF
+_DEVID1                           00002006
+_EC_OSC                           00003FFB
+_EXTRC                            00003FFF
+_EXTRCIO                          00003FFE
+_EXTRC_OSC_CLKOUT                 00003FFF
+_EXTRC_OSC_NOCLKOUT               00003FFE
+_FCMEN_OFF                        000037FF
+_FCMEN_ON                         00003FFF
+_FOSC_EC                          00003FFB
+_FOSC_EXTRC_CLKOUT                00003FFF
+_FOSC_EXTRC_NOCLKOUT              00003FFE
+_FOSC_HS                          00003FFA
+_FOSC_INTRC_CLKOUT                00003FFD
+_FOSC_INTRC_NOCLKOUT              00003FFC
+_FOSC_LP                          00003FF8
+_FOSC_XT                          00003FF9
+_HS_OSC                           00003FFA
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_IESO_OFF                         00003BFF
+_IESO_ON                          00003FFF
+_INTOSC                           00003FFD
+_INTOSCIO                         00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FF8
+_LVP_OFF                          00002FFF
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FEF
+MPASM 5.73                          MAIN.ASM   8-26-2018  21:58:55         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_WDTE_OFF                         00003FF7
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FF7
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FF9
+__16F887                          00000001
+counter                           00000075
+counter2                          00000076
+endGLOBALcounteroverflow          00000055
+enddigit1overflow                 00000036
+enddigit2overflow                 0000004A
+int_TEMPORARY                     00000078
+inttempoverflowcheck              00000135
+inttempunderflowcheck             00000142
+loop                              00000020
+mSETUP                            00000089
+main                              0000001F
+prgFlags                          00000074
+tmrDigit1                         00000072
+tmrDigit2                         00000073
+
+Errors   :     0
+Warnings :   102 reported,     0 suppressed
+Messages :    31 reported,     0 suppressed
+
+

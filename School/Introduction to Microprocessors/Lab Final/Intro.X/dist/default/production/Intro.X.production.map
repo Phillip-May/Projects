@@ -1,0 +1,77 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Sun Aug 26 21:58:56 2018
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000002
+                   .cinit    romdata   0x000001    program   0x000004
+                   .org_1       code   0x000004    program   0x0002c4
+.config_2007_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002007    program   0x000002
+.config_2008_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002008    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x000165      
+                            0x002007    0x002008      
+            359 out of 8455 program addresses used, program memory utilization is 4%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+               DELAYINNER   0x0000e5    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               DELAYOUTER   0x0000e3    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             DISPLAYDELAY   0x0000e1    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               EEPROMMODE   0x000116    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                EEPROMend   0x000159    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              EEPROMstart   0x000120    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              ENDDECCHECK   0x00012c    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              ENDINCCHECK   0x000127    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+            ENDSTARTCHECK   0x000068    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             ENDSTOPCHECK   0x000086    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               SAVERESULT   0x0000ea    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              WRITECHANGE   0x0000d5    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             _.org_1_0102   0x000102    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+ endGLOBALcounteroverflow   0x000055    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+        enddigit1overflow   0x000036    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+        enddigit2overflow   0x00004a    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+     inttempoverflowcheck   0x000135    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+    inttempunderflowcheck   0x000142    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                     loop   0x000020    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                   mSETUP   0x000089    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                     main   0x00001f    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x00001f    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                     loop   0x000020    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+        enddigit1overflow   0x000036    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+        enddigit2overflow   0x00004a    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+ endGLOBALcounteroverflow   0x000055    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+            ENDSTARTCHECK   0x000068    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             ENDSTOPCHECK   0x000086    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                   mSETUP   0x000089    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              WRITECHANGE   0x0000d5    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             DISPLAYDELAY   0x0000e1    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               DELAYOUTER   0x0000e3    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               DELAYINNER   0x0000e5    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               SAVERESULT   0x0000ea    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             _.org_1_0102   0x000102    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               EEPROMMODE   0x000116    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              EEPROMstart   0x000120    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              ENDINCCHECK   0x000127    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+              ENDDECCHECK   0x00012c    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+     inttempoverflowcheck   0x000135    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+    inttempunderflowcheck   0x000142    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                EEPROMend   0x000159    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
