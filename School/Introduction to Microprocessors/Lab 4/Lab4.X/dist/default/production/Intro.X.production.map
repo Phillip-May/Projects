@@ -1,0 +1,49 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Sun Aug 26 20:31:43 2018
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000058
+                   .cinit    romdata   0x00002c    program   0x000004
+.config_2007_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002007    program   0x000002
+.config_2008_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002008    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00002d      
+                            0x002007    0x002008      
+            48 out of 8455 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+           Delaysubrouter   0x000016    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+         LEDoffcycleinner   0x000026    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+         LEDoffcycleouter   0x000022    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               LEDoncycle   0x00001c    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          LEDoncycleouter   0x000018    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                Mainstart   0x000013    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                    START   0x000000    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             _.org_0_002B   0x00002b    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x000000    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                Mainstart   0x000013    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+           Delaysubrouter   0x000016    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          LEDoncycleouter   0x000018    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               LEDoncycle   0x00001c    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+         LEDoffcycleouter   0x000022    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+         LEDoffcycleinner   0x000026    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+             _.org_0_002B   0x00002b    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
