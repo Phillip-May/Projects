@@ -1,0 +1,44 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Sun Aug 26 20:08:21 2018
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                 RES_VECT       code   0x000000    program   0x000002
+                   .cinit    romdata   0x000001    program   0x000004
+                MAIN_PROG       code   0x000003    program   0x00005c
+.config_2007_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002007    program   0x000002
+.config_2008_BUILD/DEFAULT/PRODUCTION/MAIN.O       code   0x002008    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000030      
+                            0x002007    0x002008      
+            51 out of 8455 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                  Ifstart   0x00001d    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               NOTPRESSED   0x000029    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                  PRESSED   0x000022    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                    START   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          _MAIN_PROG_002D   0x000030    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                  Ifstart   0x00001d    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+                  PRESSED   0x000022    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+               NOTPRESSED   0x000029    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          _MAIN_PROG_002D   0x000030    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+

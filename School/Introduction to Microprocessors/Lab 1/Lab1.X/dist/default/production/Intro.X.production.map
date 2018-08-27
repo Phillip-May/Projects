@@ -1,0 +1,35 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Sun Aug 26 19:56:32 2018
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                 RES_VECT       code   0x000000    program   0x000002
+                   .cinit    romdata   0x000001    program   0x000004
+                MAIN_PROG       code   0x000003    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000003      
+            4 out of 8455 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          _MAIN_PROG_0000   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+          _MAIN_PROG_0000   0x000003    program     static K:\apps\temporary github projects\Introduction to Microprocessors\Intro.X\main.asm
+
+
