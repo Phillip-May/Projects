@@ -1,0 +1,4 @@
+Message[302] K:\APPS\TEMPORARY GITHUB PROJECTS\INTRODUCTION TO MICROPROCESSORS\INTRO.X\MAIN.ASM 26 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] K:\APPS\TEMPORARY GITHUB PROJECTS\INTRODUCTION TO MICROPROCESSORS\INTRO.X\MAIN.ASM 29 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[305] K:\APPS\TEMPORARY GITHUB PROJECTS\INTRODUCTION TO MICROPROCESSORS\INTRO.X\MAIN.ASM 38 : Using default destination of 1 (file).
+Message[302] K:\APPS\TEMPORARY GITHUB PROJECTS\INTRODUCTION TO MICROPROCESSORS\INTRO.X\MAIN.ASM 38 : Register in operand not in bank 0.  Ensure that bank bits are correct.
